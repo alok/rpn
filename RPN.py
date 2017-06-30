@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 """ Reverse Polish Notation calculator. Uses Python's builtin capabilities to do all parsing. """
 
-import argparse
+import ast
 import inspect
-import os
 import sys
-from operator import add, eq, gt, lt, mul, neg, sub, truediv
+from operator import (add, and_, eq, ge, gt, le, lt, mul, ne, neg, not_, or_,
+                      sub, truediv)
 
 stack = []
 
@@ -17,7 +17,7 @@ def push(*args, stack=stack) -> None:
 
 
 def pop(n=1, stack=stack):
-    '''Pop `n` elements. Stateful'''
+    '''Pop `n` elements. Stateful.'''
     # TODO should this be a list instead of a generator?
     return [stack.pop() for _ in range(n)]
 
@@ -27,6 +27,7 @@ input = sys.argv[1:]
 UNARY_OPS = {
     'abs': abs,
     '|': abs,
+    '~': not_,
     'neg': neg, }
 
 BINARY_OPS = {
@@ -37,6 +38,8 @@ BINARY_OPS = {
     '^': pow,
     '=': eq,
     '>': gt,
+    '>=': ge,
+    '<=': le,
     '<': lt, }
 
 # merge dicts with ** op
@@ -57,6 +60,7 @@ def is_float(x: str) -> bool:
     except:
         return False
 
+
 def rpn(input, stack=stack):
     for token in input:
         # skip whitespace
@@ -71,7 +75,8 @@ def rpn(input, stack=stack):
         elif token in BINARY_OPS:
             push(BINARY_OPS[token](*pop(n=2)))
         else:
-            pass
+            # To handle bools and such. Order matters, for now.
+            push(ast.literal_eval(token))
             # XXX Security vulnerability here, but it does make the calculator more general.
             # push(eval(token + '(*pop(n=' + str(get_num_args(token)) + '))'))
     return stack
